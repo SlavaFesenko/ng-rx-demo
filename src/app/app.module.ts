@@ -15,11 +15,15 @@ import { counterReducer } from './store/counter.reducer';
     CounterOutputComponent,
     CounterControlsComponent,
   ],
-  imports: [BrowserModule, StoreModule.forRoot({
-    counter: counterReducer,
-    // auth: authReducer
-  }), EffectsModule.forRoot([CounterEffects])],
+  imports: [
+    BrowserModule,
+    StoreModule.forRoot({
+      counter: counterReducer,
+      // auth: authReducer
+    }),
+    EffectsModule.forRoot([CounterEffects])
+  ],
   providers: [],
   bootstrap: [AppComponent],
 })
-export class AppModule {}
+export class AppModule { }
