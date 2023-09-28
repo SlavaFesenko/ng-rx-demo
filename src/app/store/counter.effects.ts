@@ -1,32 +1,41 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { tap } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { of, switchMap, tap, withLatestFrom } from 'rxjs';
 
-import { decrement, increment } from './counter.actions';
+import { decrement, increment, init, set } from './counter.actions';
+import { selectCount } from './counter.selectors';
 
 @Injectable()
 export class CounterEffects {
+    loadCount = createEffect(() =>
+        this.actions$.pipe(
+            ofType(init),
+            switchMap(() => {
+                const storedCounter = localStorage.getItem('count')
+                if (storedCounter) {
+                    return of(set({ value: +storedCounter }))
+                }
+                return of(set({ value: 0 }))
+            })
+        )
+    )
+
     saveCount = createEffect(
         () =>
-            // actions$ Observable emit-ит new Value каждый раз,
-            // когда во ВСЕМ приложении вызывается ЛЮБОЙ store.dispatch(action)
             this.actions$.pipe(
-
-                // фильтр action-ов, для которых актуален данный Effect
                 ofType(increment, decrement),
-
-                // действия, которые необходимо произвести с целевым action
-                tap((action) => {
-                    console.log(action);
-                    localStorage.setItem('count', action.value.toString());
+                withLatestFrom(this.store.select(selectCount)),
+                tap(([action, counter]) => {
+                    console.log(action)
+                    localStorage.setItem('count', counter.toString())
                 })
             ),
-            
-        // т.к. последним оператором идет tap(), не эмитящий новых Observable,
-        // в конфигурации effect-а необходимо явно указать, что он 
-        // не диспатчит никаких actions
         { dispatch: false }
     )
 
-    constructor(private actions$: Actions) { }
+    constructor(
+        private actions$: Actions,
+        private store: Store<{ counter: number }>
+    ) { }
 }
